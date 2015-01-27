@@ -1,3 +1,6 @@
+.project
+.classpath
+.settings/
 target/
 build/
 lib/
@@ -11,3 +14,4 @@ target/
 *.iws
 
 !gradlew-wrapper.jar
+/bin/

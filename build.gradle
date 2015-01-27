@@ -1,31 +1,22 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3"
-        classpath "com.github.townsfolk:gradle-release:1.2"
-    }
+plugins {
+	id 'groovy'
+	id 'eclipse'
+	id 'maven'
+	id 'net.nemerosa.versioning' version '1.1.0'
 }
-apply plugin: 'groovy'
-apply plugin: 'idea'
-apply plugin: 'maven-publish'
 
 defaultTasks 'clean', 'jar', 'test'
 
-group = 'com.athaydes'
-version = "1.2.4"
-
-def groovyVersion = '2.0.8'
-def spockVersion = '0.7-groovy-2.0'
+group = 'com.github.slugger.spock'
+version = versioning.info.display
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-	compile "org.spockframework:spock-core:${spockVersion}"
+	compile "org.codehaus.groovy:groovy-all:2.0.8"
+	compile "org.spockframework:spock-core:0.7-groovy-2.0"
 	testCompile "cglib:cglib-nodep:2.2.2"
 }
 
@@ -33,17 +24,6 @@ test {
 	exclude '**/FakeTest.class'
 	systemProperty 'project.buildDir', project.buildDir
 	testLogging.showStandardStreams = true
-	beforeTest { descriptor ->
-		logger.lifecycle( "Running test: " + descriptor )
-	}
-}
-
-jar {
-	manifest {
-		attributes(
-				"Implementation-Title": "Athaydes-Spock-Reports",
-				"Implementation-Version": version )
-	}
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -51,29 +31,3 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     classifier "sources"
     extension "jar"
 }
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-        }
-    }
-}
-
-apply plugin: 'bintray'
-apply plugin: 'release'
-
-bintray {
-    user = project.hasProperty("bintrayUserName") ? bintrayUserName : null
-    key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : null
-    publications = ["mavenJava"]
-    pkg {
-        repo = 'maven'
-        name = 'spock-reports'
-        licenses = ['Apache-2.0']
-    }
-}
-bintrayUpload.dependsOn build, sourcesJar
-createReleaseTag.dependsOn bintrayUpload
-
