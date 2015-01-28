@@ -30,6 +30,23 @@ class ArtifactWriter {
 		return obj.reflection.name
 	}
 
+	static private String getIdString(final def leaf, final int itrNum) {
+		def ids = []
+		def parent = leaf
+		while(parent) {
+			ids << parent.name
+			if(parent instanceof FeatureInfo)
+				ids << itrNum
+			parent = parent.parent
+		}
+		ids.join(':').hashCode().toString()
+	}
+	
+	static String getArtifactDir(final def info) {
+		def itrNum = (info instanceof IterationInfo) ? info.estimatedNumIterations : 1
+		return "${getSpecClassName(info)}/${getIdString(info, itrNum)}"
+	}
+
 	private final MarkupBuilder builder
 	private final def leaf
 	private final int itrNum
@@ -45,22 +62,9 @@ class ArtifactWriter {
 		this.reportBase = reportBase
 	}
 	
-	private String getIdString() {
-		def ids = []
-		def parent = leaf
-		while(parent) {
-			ids << parent.name
-			if(parent instanceof FeatureInfo)
-				ids << itrNum
-			parent = parent.parent
-		}
-		ids.join(':').hashCode().toString()
-	}
-
 	void write() {
-		def str = getIdString()
-		def cls = getSpecClassName(leaf)
-		def artifacts = new File(reportBase, "$cls/$str").listFiles()
+		def relDir = getArtifactDir(leaf)
+		def artifacts = new File(reportBase, relDir).listFiles()
 		if(artifacts.size() > 0) {
 			builder.tr {
 				td {
@@ -71,7 +75,7 @@ class ArtifactWriter {
 						td {
 							div {
 								span {
-									a(href: "$cls/$str/$f.name", "$f.name (${FileUtils.byteCountToDisplaySize(f.size())})")
+									a(href: "$relDir/$f.name", "$f.name (${FileUtils.byteCountToDisplaySize(f.size())})")
 								}
 							}
 						}
