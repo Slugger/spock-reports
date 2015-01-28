@@ -161,6 +161,7 @@ class HtmlReportCreator extends AbstractHtmlCreator<SpecData>
                     writeFeatureDescription( builder, name, cssClass )
 					writeFeatureBlocks( builder, feature, iteration )
 					problemWriter.writeProblemBlockForIteration( builder, iteration, problems )
+					writeArtifacts( builder, iteration, new File( outputDir ) )
 				}
 			} else {
 				final failures = run ? countProblems( [ run ], HtmlReportCreator.&isFailure ) : 0
@@ -171,11 +172,16 @@ class HtmlReportCreator extends AbstractHtmlCreator<SpecData>
 				if ( run ) {
 					writeRun( builder, run )
 					problemWriter.writeProblemBlockForAllIterations( builder, run, errors > 0, failures > 0 )
+					writeArtifacts( builder, run.feature, new File( outputDir ) )
 				}
 			}
 		}
 	}
 
+	private void writeArtifacts ( MarkupBuilder builder, def info, File reportBase ) {
+		new ArtifactWriter(builder, info, reportBase).write()
+	}
+	
 	private void writeFeatureBlocks( MarkupBuilder builder, FeatureInfo feature, IterationInfo iteration = null ) {
 		feature.blocks.each { BlockInfo block ->
 			writeBlock( builder, block, feature, iteration )
