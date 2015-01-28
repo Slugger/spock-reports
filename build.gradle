@@ -17,6 +17,7 @@ repositories {
 dependencies {
 	compile "org.codehaus.groovy:groovy-all:2.0.8"
 	compile "org.spockframework:spock-core:0.7-groovy-2.0"
+	compile 'commons-io:commons-io:2.4'
 	testCompile "cglib:cglib-nodep:2.2.2"
 }
 
