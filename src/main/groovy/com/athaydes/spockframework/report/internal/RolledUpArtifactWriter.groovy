@@ -21,7 +21,7 @@ import org.apache.commons.io.FileUtils
 import org.spockframework.runtime.model.FeatureInfo
 import org.spockframework.runtime.model.IterationInfo
 
-class ArtifactWriter {
+class RolledUpArtifactWriter {
 
 	static private String getSpecClassName(final def info) {
 		def obj = info
@@ -46,42 +46,52 @@ class ArtifactWriter {
 		return "${getSpecClassName(info)}/${getIdString(info, itrNum)}"
 	}
 	
-	static private final Map itrCounts = [:]
-
 	private final MarkupBuilder builder
-	private final def leaf
+	private final FeatureRun run
 	private final File reportBase
 	
-	ArtifactWriter(MarkupBuilder builder, def leaf, File reportBase) {
+	RolledUpArtifactWriter(MarkupBuilder builder, FeatureRun run, File reportBase) {
 		this.builder = builder
-		this.leaf = leaf
-		if(leaf instanceof IterationInfo) {
-			synchronized(ArtifactWriter) {
-				def c = itrCounts[leaf.parent]
-				if(c == null) {
-					c = 1
-					itrCounts[leaf.parent] = c
-				} else
-					itrCounts[leaf.parent] = ++c
-			}
-		}
+		this.run = run
 		this.reportBase = reportBase
 	}
 	
 	void write() {
-		def relDir = getArtifactDir(leaf, (leaf instanceof IterationInfo) ? (itrCounts[leaf.parent] ?: 1) : 1 )
-		def artifacts = new File(reportBase, relDir).listFiles()
-		if(artifacts?.size() > 0) {
+		def doIt = false
+		def keys = run.failuresByIteration.keySet().toArray()
+		for(int i = 0; !doIt && i < keys.size(); ++i) {
+			def relDir = getArtifactDir(keys[i], i + 1)
+			def artifacts = new File(reportBase, relDir)
+			doIt = artifacts.listFiles()?.find { it.size() > 0 } != null
+		}
+
+		if(doIt) {
 			builder.tr {
 				td {
 					div('class': 'block-kind', 'Artifacts:')
 				}
-				artifacts.each { f ->
-					if(f.size() > 0) {
-						td {
-							div {
-								span {
-									a(href: "$relDir/$f.name", "$f.name (${FileUtils.byteCountToDisplaySize(f.size())})")
+				td(colspan: '10') {
+					table('class': 'ex-table') {
+						thead()
+						tbody {
+							run.failuresByIteration.keySet().toArray().eachWithIndex { def info, int i ->
+								tr {
+									def relDir = getArtifactDir(info, i + 1)
+									def artifacts = new File(reportBase, relDir)
+									def files = artifacts.listFiles()?.findAll { f -> f.size() > 0 }
+									if(files?.size()) {
+										files.each { f ->
+											td {
+												span {
+													a(href: "$relDir/$f.name", "$f.name (${FileUtils.byteCountToDisplaySize(f.size())})")
+												}
+											}
+										}
+									} else {
+										td {
+											span('[No artifacts]')
+										}
+									}
 								}
 							}
 						}
