@@ -199,14 +199,20 @@ class HtmlReportCreator extends AbstractHtmlCreator<SpecData>
 				if ( run ) {
 					writeRun( builder, run )
 					problemWriter.writeProblemBlockForAllIterations( builder, run, errors > 0, failures > 0 )
-					writeArtifacts( builder, run.feature, new File( outputDir ) )
+					writeArtifacts( builder, run, new File( outputDir ) )
 				}
 			}
 		}
 	}
 
 	private void writeArtifacts ( MarkupBuilder builder, def info, File reportBase ) {
-		new ArtifactWriter(builder, info, reportBase).write()
+		switch(info.getClass()) {
+			case FeatureRun:
+				new RolledUpArtifactWriter(builder, info, reportBase).write()
+				break
+			default:
+				new ArtifactWriter(builder, info, reportBase).write()			
+		}
 	}
 	
 	private void writeFeatureBlocks( MarkupBuilder builder, FeatureInfo feature, IterationInfo iteration = null ) {
