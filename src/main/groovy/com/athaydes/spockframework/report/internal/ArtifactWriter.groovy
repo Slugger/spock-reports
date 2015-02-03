@@ -65,7 +65,7 @@ class ArtifactWriter {
 	void write() {
 		def relDir = getArtifactDir(leaf)
 		def artifacts = new File(reportBase, relDir).listFiles()
-		if(artifacts.size() > 0) {
+		if(artifacts?.size() > 0) {
 			builder.tr {
 				td {
 					div('class': 'block-kind', 'Artifacts:')
